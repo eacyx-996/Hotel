@@ -19,7 +19,8 @@
       <el-button :icon="Refresh" @click="reset">重置</el-button>
     </div>
 
-    <el-table :data="list" border stripe v-loading="loading">
+    <div class="table-card">
+      <el-table :data="list" stripe v-loading="loading">
       <el-table-column type="index" label="#" width="60" />
       <el-table-column prop="roomNumber" label="房间号" width="100" />
       <el-table-column label="房型" width="140">
@@ -52,16 +53,16 @@
       </el-table-column>
     </el-table>
 
-    <el-pagination
-      style="margin-top: 16px; justify-content: flex-end; display: flex"
-      v-model:current-page="pageNum"
-      v-model:page-size="pageSize"
-      :total="total"
-      :page-sizes="[10, 20, 50]"
-      layout="total, sizes, prev, pager, next"
-      @size-change="loadData"
-      @current-change="loadData"
-    />
+      <el-pagination
+        v-model:current-page="pageNum"
+        v-model:page-size="pageSize"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next"
+        @size-change="loadData"
+        @current-change="loadData"
+      />
+    </div>
 
     <!-- 编辑弹窗 -->
     <el-dialog v-model="dialogVisible" :title="form.id ? '编辑客房' : '新增客房'" width="500px">
@@ -98,7 +99,8 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search, Refresh, ArrowDown } from '@element-plus/icons-vue'
-import request from '@/utils/request'
+import { pageRooms, createRoom, updateRoom, updateRoomStatus, deleteRoom } from '@/api/room'
+import { listRoomTypes } from '@/api/roomType'
 
 const list = ref([])
 const roomTypes = ref([])
@@ -125,15 +127,15 @@ const rules = {
 const getRoomTypeName = (id) => roomTypes.value.find(t => t.id === id)?.name || '-'
 
 const loadRoomTypes = async () => {
-  const res = await request.get('/room-type/list')
+  const res = await listRoomTypes()
   roomTypes.value = res.data
 }
 
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await request.get('/room/page', {
-      params: { pageNum: pageNum.value, pageSize: pageSize.value, keyword: keyword.value, roomTypeId: roomTypeId.value, status: statusFilter.value }
+    const res = await pageRooms({
+      pageNum: pageNum.value, pageSize: pageSize.value, keyword: keyword.value, roomTypeId: roomTypeId.value, status: statusFilter.value
     })
     list.value = res.data.records
     total.value = res.data.total
@@ -158,9 +160,9 @@ const handleSave = async () => {
   saving.value = true
   try {
     if (form.value.id) {
-      await request.put('/room', form.value)
+      await updateRoom(form.value)
     } else {
-      await request.post('/room', form.value)
+      await createRoom(form.value)
     }
     ElMessage.success('保存成功')
     dialogVisible.value = false
@@ -171,14 +173,14 @@ const handleSave = async () => {
 }
 
 const updateStatus = async (row, status) => {
-  await request.put(`/room/${row.id}/status`, null, { params: { status } })
+  await updateRoomStatus(row.id, status)
   ElMessage.success('状态更新成功')
   loadData()
 }
 
 const handleDelete = async (row) => {
   await ElMessageBox.confirm(`确定要删除客房"${row.roomNumber}"吗?`, '提示', { type: 'warning' })
-  await request.delete(`/room/${row.id}`)
+  await deleteRoom(row.id)
   ElMessage.success('删除成功')
   loadData()
 }

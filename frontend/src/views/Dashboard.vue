@@ -9,30 +9,46 @@
     <el-row :gutter="20" style="margin-bottom: 20px">
       <el-col :span="6">
         <el-card class="stat-card" shadow="hover">
-          <el-icon :size="32" color="#409EFF"><OfficeBuilding /></el-icon>
-          <div class="stat-value">{{ stats.roomStats?.total || 0 }}</div>
-          <div class="stat-label">客房总数</div>
+          <div class="stat-icon" style="background: rgba(64, 158, 255, 0.12)">
+            <el-icon :size="28" color="#409EFF"><OfficeBuilding /></el-icon>
+          </div>
+          <div>
+            <div class="stat-value">{{ stats.roomStats?.total || 0 }}</div>
+            <div class="stat-label">客房总数</div>
+          </div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card class="stat-card" shadow="hover">
-          <el-icon :size="32" color="#67C23A"><SuccessFilled /></el-icon>
-          <div class="stat-value">{{ stats.roomStats?.available || 0 }}</div>
-          <div class="stat-label">空闲房间</div>
+          <div class="stat-icon" style="background: rgba(103, 194, 58, 0.12)">
+            <el-icon :size="28" color="#67C23A"><SuccessFilled /></el-icon>
+          </div>
+          <div>
+            <div class="stat-value">{{ stats.roomStats?.available || 0 }}</div>
+            <div class="stat-label">空闲房间</div>
+          </div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card class="stat-card" shadow="hover">
-          <el-icon :size="32" color="#E6A23C"><Tickets /></el-icon>
-          <div class="stat-value">{{ stats.totalOrders || 0 }}</div>
-          <div class="stat-label">订单总数</div>
+          <div class="stat-icon" style="background: rgba(230, 162, 60, 0.12)">
+            <el-icon :size="28" color="#E6A23C"><Tickets /></el-icon>
+          </div>
+          <div>
+            <div class="stat-value">{{ stats.totalOrders || 0 }}</div>
+            <div class="stat-label">订单总数</div>
+          </div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card class="stat-card" shadow="hover">
-          <el-icon :size="32" color="#F56C6C"><Money /></el-icon>
-          <div class="stat-value">¥{{ formatMoney(stats.totalRevenue) }}</div>
-          <div class="stat-label">总营收</div>
+          <div class="stat-icon" style="background: rgba(245, 108, 108, 0.12)">
+            <el-icon :size="28" color="#F56C6C"><Money /></el-icon>
+          </div>
+          <div>
+            <div class="stat-value">¥{{ formatMoney(stats.totalRevenue) }}</div>
+            <div class="stat-label">总营收</div>
+          </div>
         </el-card>
       </el-col>
     </el-row>
@@ -40,13 +56,13 @@
     <!-- 图表区域 -->
     <el-row :gutter="20">
       <el-col :span="16">
-        <el-card shadow="hover">
+        <el-card class="chart-card" shadow="hover">
           <template #header><span>近7天订单数与营收趋势</span></template>
           <div ref="trendChartRef" style="height: 350px"></div>
         </el-card>
       </el-col>
       <el-col :span="8">
-        <el-card shadow="hover">
+        <el-card class="chart-card" shadow="hover">
           <template #header><span>订单状态分布</span></template>
           <div ref="pieChartRef" style="height: 350px"></div>
         </el-card>
@@ -55,13 +71,13 @@
 
     <el-row :gutter="20" style="margin-top: 20px">
       <el-col :span="12">
-        <el-card shadow="hover">
+        <el-card class="chart-card" shadow="hover">
           <template #header><span>房态概览</span></template>
           <div ref="roomChartRef" style="height: 300px"></div>
         </el-card>
       </el-col>
       <el-col :span="12">
-        <el-card shadow="hover">
+        <el-card class="chart-card" shadow="hover">
           <template #header><span>房态列表</span></template>
           <el-table :data="roomStatusList" stripe style="width: 100%">
             <el-table-column prop="label" label="状态" />
@@ -83,7 +99,7 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
-import request from '@/utils/request'
+import { getDashboardStats } from '@/api/dashboard'
 
 const stats = ref({})
 const trendChartRef = ref(null)
@@ -102,7 +118,7 @@ const formatMoney = (v) => {
 
 const loadData = async () => {
   try {
-    const res = await request.get('/dashboard/stats')
+    const res = await getDashboardStats()
     stats.value = res.data
     await nextTick()
     renderCharts()

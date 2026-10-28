@@ -11,7 +11,8 @@
       <el-button :icon="Refresh" @click="reset">重置</el-button>
     </div>
 
-    <el-table :data="list" border stripe v-loading="loading">
+    <div class="table-card">
+      <el-table :data="list" stripe v-loading="loading">
       <el-table-column type="index" label="#" width="60" />
       <el-table-column prop="username" label="用户名" width="140" />
       <el-table-column prop="realName" label="真实姓名" width="120" />
@@ -37,16 +38,16 @@
       </el-table-column>
     </el-table>
 
-    <el-pagination
-      style="margin-top: 16px; justify-content: flex-end; display: flex"
-      v-model:current-page="pageNum"
-      v-model:page-size="pageSize"
-      :total="total"
-      :page-sizes="[10, 20, 50]"
-      layout="total, sizes, prev, pager, next"
-      @size-change="loadData"
-      @current-change="loadData"
-    />
+      <el-pagination
+        v-model:current-page="pageNum"
+        v-model:page-size="pageSize"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next"
+        @size-change="loadData"
+        @current-change="loadData"
+      />
+    </div>
 
     <!-- 编辑弹窗 -->
     <el-dialog v-model="dialogVisible" :title="form.id ? '编辑用户' : '新增用户'" width="500px">
@@ -104,7 +105,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search, Refresh } from '@element-plus/icons-vue'
-import request from '@/utils/request'
+import { pageUsers, createUser, updateUser, resetUserPassword, deleteUser } from '@/api/user'
 
 const list = ref([])
 const total = ref(0)
@@ -138,7 +139,7 @@ const resetRules = {
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await request.get('/user/page', { params: { pageNum: pageNum.value, pageSize: pageSize.value, keyword: keyword.value } })
+    const res = await pageUsers({ pageNum: pageNum.value, pageSize: pageSize.value, keyword: keyword.value })
     list.value = res.data.records
     total.value = res.data.total
   } finally {
@@ -162,9 +163,9 @@ const handleSave = async () => {
   saving.value = true
   try {
     if (form.value.id) {
-      await request.put('/user', form.value)
+      await updateUser(form.value)
     } else {
-      await request.post('/user', form.value)
+      await createUser(form.value)
     }
     ElMessage.success('保存成功')
     dialogVisible.value = false
@@ -183,7 +184,7 @@ const handleReset = async () => {
   await resetFormRef.value.validate()
   resetting.value = true
   try {
-    await request.put('/user/reset-password', { id: resetForm.value.id, password: resetForm.value.password })
+    await resetUserPassword({ id: resetForm.value.id, password: resetForm.value.password })
     ElMessage.success('密码重置成功')
     resetDialogVisible.value = false
   } finally {
@@ -193,7 +194,7 @@ const handleReset = async () => {
 
 const handleDelete = async (row) => {
   await ElMessageBox.confirm(`确定要删除用户"${row.username}"吗?`, '提示', { type: 'warning' })
-  await request.delete(`/user/${row.id}`)
+  await deleteUser(row.id)
   ElMessage.success('删除成功')
   loadData()
 }

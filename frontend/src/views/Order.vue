@@ -14,7 +14,8 @@
       <el-button :icon="Refresh" @click="reset">重置</el-button>
     </div>
 
-    <el-table :data="list" border stripe v-loading="loading">
+    <div class="table-card">
+      <el-table :data="list" stripe v-loading="loading">
       <el-table-column prop="orderNo" label="订单号" width="200" />
       <el-table-column prop="guestName" label="客人姓名" width="100" />
       <el-table-column prop="guestPhone" label="联系手机" width="130" />
@@ -47,7 +48,7 @@
             <el-button link type="primary" size="small">状态流转<el-icon><ArrowDown /></el-icon></el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item v-for="(label, key) in orderStatusMap" :key="key" @click="updateOrderStatus(row, Number(key))">
+                <el-dropdown-item v-for="(label, key) in orderStatusMap" :key="key" @click="updateOrderStatusFn(row, Number(key))">
                   {{ label }}
                 </el-dropdown-item>
               </el-dropdown-menu>
@@ -68,16 +69,16 @@
       </el-table-column>
     </el-table>
 
-    <el-pagination
-      style="margin-top: 16px; justify-content: flex-end; display: flex"
-      v-model:current-page="pageNum"
-      v-model:page-size="pageSize"
-      :total="total"
-      :page-sizes="[10, 20, 50]"
-      layout="total, sizes, prev, pager, next"
-      @size-change="loadData"
-      @current-change="loadData"
-    />
+      <el-pagination
+        v-model:current-page="pageNum"
+        v-model:page-size="pageSize"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next"
+        @size-change="loadData"
+        @current-change="loadData"
+      />
+    </div>
 
     <!-- 创建预订弹窗 -->
     <el-dialog v-model="createDialogVisible" title="创建预订订单" width="600px">
@@ -132,7 +133,9 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search, Refresh, ArrowDown } from '@element-plus/icons-vue'
-import request from '@/utils/request'
+import { pageOrders, getOrderDetail, createOrder, updateOrderStatus, updateOrderPayStatus, deleteOrder } from '@/api/order'
+import { listRoomsWithType, listAvailableRooms } from '@/api/room'
+import { listRoomTypes } from '@/api/roomType'
 
 const list = ref([])
 const availableRooms = ref([])
@@ -185,8 +188,8 @@ const disableCheckout = (date) => {
 
 const loadBaseData = async () => {
   const [roomsRes, typesRes] = await Promise.all([
-    request.get('/room/with-type'),
-    request.get('/room-type/list'),
+    listRoomsWithType(),
+    listRoomTypes(),
   ])
   roomNumberMap.value = {}
   roomsRes.data.forEach(r => {
@@ -195,15 +198,15 @@ const loadBaseData = async () => {
   roomTypes.value = typesRes.data
   roomTypes.value.forEach(t => { roomTypeNameMap.value[t.id] = t.name })
 
-  const availRes = await request.get('/room/available')
+  const availRes = await listAvailableRooms()
   availableRooms.value = availRes.data
 }
 
 const loadData = async () => {
   loading.value = true
   try {
-    const res = await request.get('/order/page', {
-      params: { pageNum: pageNum.value, pageSize: pageSize.value, keyword: keyword.value, orderStatus: orderStatusFilter.value }
+    const res = await pageOrders({
+      pageNum: pageNum.value, pageSize: pageSize.value, keyword: keyword.value, orderStatus: orderStatusFilter.value
     })
     list.value = res.data.records
     total.value = res.data.total
@@ -224,7 +227,7 @@ const handleCreate = async () => {
   await createFormRef.value.validate()
   creating.value = true
   try {
-    const res = await request.post('/order', createForm.value)
+    const res = await createOrder(createForm.value)
     ElMessage.success(`预订成功!订单号: ${res.data.orderNo}`)
     createDialogVisible.value = false
     loadData()
@@ -234,26 +237,26 @@ const handleCreate = async () => {
 }
 
 const viewDetail = async (row) => {
-  const res = await request.get(`/order/${row.id}`)
+  const res = await getOrderDetail(row.id)
   currentOrder.value = res.data
   detailDialogVisible.value = true
 }
 
-const updateOrderStatus = async (row, status) => {
-  await request.put(`/order/${row.id}/status`, null, { params: { status } })
+const updateOrderStatusFn = async (row, status) => {
+  await updateOrderStatus(row.id, status)
   ElMessage.success('状态更新成功')
   loadData()
 }
 
 const updatePayStatus = async (row, payStatus) => {
-  await request.put(`/order/${row.id}/pay`, null, { params: { payStatus } })
+  await updateOrderPayStatus(row.id, payStatus)
   ElMessage.success('支付状态更新成功')
   loadData()
 }
 
 const handleDelete = async (row) => {
   await ElMessageBox.confirm(`确定要删除订单"${row.orderNo}"吗?`, '提示', { type: 'warning' })
-  await request.delete(`/order/${row.id}`)
+  await deleteOrder(row.id)
   ElMessage.success('删除成功')
   loadData()
 }

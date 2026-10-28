@@ -1,20 +1,22 @@
 <template>
   <div class="login-container">
     <div class="login-box">
-      <h2>🏨 酒店管理平台</h2>
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="0">
+      <div class="login-logo">
+        <div class="logo-icon">🏨</div>
+        <h2>酒店管理平台</h2>
+        <p>Hotel Management System</p>
+      </div>
+      <el-form :model="form" :rules="rules" ref="formRef" label-width="0" size="large">
         <el-form-item prop="username">
-          <el-input v-model="form.username" placeholder="用户名" size="large" :prefix-icon="User" />
+          <el-input v-model="form.username" placeholder="用户名" :prefix-icon="User" />
         </el-form-item>
         <el-form-item prop="password">
-          <el-input v-model="form.password" type="password" placeholder="密码" size="large" show-password :prefix-icon="Lock" @keyup.enter="handleLogin" />
+          <el-input v-model="form.password" type="password" placeholder="密码" show-password :prefix-icon="Lock" @keyup.enter="handleLogin" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" size="large" style="width: 100%" :loading="loading" @click="handleLogin">登 录</el-button>
+          <el-button type="primary" style="width: 100%" :loading="loading" @click="handleLogin">登 录</el-button>
         </el-form-item>
-        <div style="text-align: center; color: #909399; font-size: 13px;">
-          默认账号: admin / 123456
-        </div>
+        <div class="login-tip">默认账号: admin / 123456</div>
       </el-form>
     </div>
   </div>

@@ -1,4 +1,4 @@
-package com.example.backend.config;
+package com.example.backend.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.backend.common.Result;

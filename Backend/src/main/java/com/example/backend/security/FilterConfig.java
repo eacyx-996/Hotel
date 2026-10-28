@@ -1,4 +1,4 @@
-package com.example.backend.config;
+package com.example.backend.security;
 
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
