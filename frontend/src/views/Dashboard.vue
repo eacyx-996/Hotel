@@ -112,6 +112,10 @@ const loadData = async () => {
 }
 
 const renderCharts = () => {
+  // 重新渲染前先销毁旧实例，避免 ECharts 重复初始化警告
+  trendChart?.dispose()
+  pieChart?.dispose()
+  roomChart?.dispose()
   const data = stats.value
   const roomStats = data.roomStats || {}
   const total = roomStats.total || 0

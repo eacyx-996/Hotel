@@ -45,8 +45,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     UserContext.setUserId(claims.get("userId", Long.class));
                     UserContext.setUsername(claims.get("username", String.class));
                     UserContext.setRole(claims.get("role", String.class));
-                    filterChain.doFilter(request, response);
-                    UserContext.clear();
+                    try {
+                        filterChain.doFilter(request, response);
+                    } finally {
+                        UserContext.clear();
+                    }
                     return;
                 }
             } catch (Exception e) {
